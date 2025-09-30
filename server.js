@@ -35,7 +35,7 @@ const server = http.createServer((req, res) => {
   ) {
     const id = req.url.match(/^\/api\/users\/([0-9]+)$/)[1]
     const user = users.find((user) => user.id.toString() === id)
-    
+
     if (!user) {
       res.statusCode = 404
       res.setHeader("Content-Type", "application/json")
@@ -72,7 +72,40 @@ const server = http.createServer((req, res) => {
         res.setHeader("Content-Type", "application/json")
         return res.end(JSON.stringify(users))
       })
-  } else if (req.url === "/api/users" && req.method === "PUT") {
+  } else if (
+    req.url.match(/^\/api\/users\/([0-9]+)$/) &&
+    req.method === "PUT"
+  ) {
+    const id = req.url.match(/^\/api\/users\/([0-9]+)$/)[1]
+    let body = []
+
+    req
+      .on("data", (chunk) => {
+        body.push(chunk)
+      })
+      .on("end", () => {
+        body = Buffer.concat(body).toString()
+        const cleanedBody = JSON.parse(body)
+
+        const user = users.find((user) => user.id.toString() === id)
+
+        if (!user) {
+          res.statusCode = 404
+          res.setHeader("Content-Type", "application/json")
+          return res.end(
+            JSON.stringify({ success: false, message: "User does not exist." })
+          )
+        }
+
+        user.name = cleanedBody.name || user.name
+        user.className = cleanedBody.className || user.className
+
+        res.statusCode = 200
+        res.setHeader("Content-Type", "application/json")
+        return res.end(
+          JSON.stringify({ success: true, message: "User updated", data: user })
+        )
+      })
   }
 })
 
