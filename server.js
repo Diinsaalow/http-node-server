@@ -106,6 +106,29 @@ const server = http.createServer((req, res) => {
           JSON.stringify({ success: true, message: 'User updated', data: user })
         )
       })
+  } else if (
+    req.url.match(/^\/api\/users\/([0-9]+)$/) &&
+    req.method === 'DELETE'
+  ) {
+    const id = req.url.match(/^\/api\/users\/([0-9]+)$/)[1]
+
+    const userIndex = users.findIndex((user) => user.id.toString() === id)
+
+    if (userIndex === -1) {
+      res.statusCode = 404
+      res.setHeader('Content-Type', 'application/json')
+      return res.end(
+        JSON.stringify({ success: false, message: 'User does not exist.' })
+      )
+    }
+
+    users.splice(userIndex, 1)
+
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'application/json')
+    return res.end(
+      JSON.stringify({ success: true, message: 'User deleted', data: users })
+    )
   }
 })
 
